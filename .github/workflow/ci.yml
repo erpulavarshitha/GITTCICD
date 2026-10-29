@@ -1,0 +1,37 @@
+name: Build Test and Sync to GitLab
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build website
+        run: |
+          test -f index.html
+          echo "Build successful"
+
+      - name: Test website
+        run: |
+          grep -q "GitHub and GitLab Integration" index.html
+          echo "Test passed"
+
+      - name: Push code to GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@gitlab.com/REPLACE_WITH_GITLAB_USERNAME/github-gitlab-cicd-project.git"
+          git push gitlab HEAD:main
